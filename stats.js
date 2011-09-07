@@ -5,6 +5,7 @@ var dgram  = require('dgram')
 
 var counters = {};
 var timers = {};
+var gauges = {};
 var dtimers = [];
 var debugInt, flushInt, server, mgmtServer;
 var startup_time = Math.round(new Date().getTime() / 1000);
@@ -23,14 +24,14 @@ var stats = {
 
 config.configFile(process.argv[2], function (config, oldConfig) {
   if (! config.debug && debugInt) {
-    clearInterval(debugInt); 
+    clearInterval(debugInt);
     debugInt = false;
   }
 
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers) + "\nDelayed Timers:\n" + sys.inspect(dtimers));
+      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers) + "\nDelayed Timers:\n" + sys.inspect(dtimers) + "\nGauges:\n" + sys.inspect(gauges));
     }, config.debugInterval || 10000);
   }
 
@@ -105,6 +106,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             }
             timers[key].push(Number(fields[0] || 0));
           }
+        } else if (fields[1].trim() == "g") {
+          gauges[key] = Number(fields[0] || 0);
         } else {
           if (fields[2] && fields[2].match(/^@([\d\.]+)/)) {
             sampleRate = Number(fields[2].match(/^@([\d\.]+)/)[1]);
@@ -199,6 +202,12 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         numStats += 1;
       }
 
+      for (key in gauges) {
+        statString += ('stats.' + key + ' ' + gauges[key] + ' ' + ts + "\n");
+        numStats += 1;
+      }
+      gauges = {};
+
       dtimers.push(new Array());
       var dtimers_now = dtimers.shift();
       for (key in dtimers_now) {
@@ -207,7 +216,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         }
         timers[key] = timers[key].concat(dtimers_now[key]);
       }
-
+      
       for (key in timers) {
         if (timers[key].length > 0) {
           var pctThreshold = config.percentThreshold || 90;
