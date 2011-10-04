@@ -1,6 +1,17 @@
 {
   graphitePort: 2003
-, graphiteHost: "graphite.host.com"
+, graphiteHost: "localhost"
 , port: 8125
+, amqp: true
+, amqpExchange: "graphite"
+, amqpMetricNameInBody: true
+, amqpOptions: {
+    host: "localhost"
+  , port: 5672
+  , login: "guest"
+  , password: "guest"
+  , vhost: '/'
+  }
+, debug: false
 }
 

@@ -5,6 +5,9 @@ A network daemon for aggregating statistics (counters and timers), rolling them 
 
 We ([Etsy][etsy]) [blogged][blog post] about how it works and why we created it.
 
+This fork of statsd can publish to graphite through an AMQP server such as rabbitmq instead of using TCP.
+
+AMQP support requires node-amqp. "npm install amqp" or https://github.com/postwait/node-amqp
 
 Concepts
 --------

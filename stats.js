@@ -6,6 +6,7 @@ var dgram  = require('dgram')
 var counters = {};
 var timers = {};
 var debugInt, flushInt, server;
+var amqpConnection = false;
 
 config.configFile(process.argv[2], function (config, oldConfig) {
   if (! config.debug && debugInt) {
@@ -18,6 +19,28 @@ config.configFile(process.argv[2], function (config, oldConfig) {
     debugInt = setInterval(function () { 
       sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
     }, config.debugInterval || 10000);
+  }
+
+  if (config.amqp && ! amqpConnection) {
+    try {
+      amqp = require('amqp')
+      amqpConnection = amqp.createConnection(config.amqpOptions);
+      amqpConnection.addListener('error', function(connectionException){
+        if (config.debug) {
+          sys.log(connectionException);
+        }
+      });
+      amqpConnection.on('ready', function() {
+        amqpExchange = amqpConnection.exchange(config.amqpExchange, { passive: 'true' }, function() {
+          amqpExchangeIsReady = true;
+        });
+      });
+    }
+    catch(e) {
+      if (config.debug) {
+        sys.log(e);
+      }
+    }
   }
 
   if (server === undefined) {
@@ -120,16 +143,28 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       statString += 'statsd.numStats ' + numStats + ' ' + ts + "\n";
       
       try {
-        var graphite = net.createConnection(config.graphitePort, config.graphiteHost);
-        graphite.addListener('error', function(connectionException){
-          if (config.debug) {
-            sys.log(connectionException);
+        if (! config.amqp) {
+          var graphite = net.createConnection(config.graphitePort, config.graphiteHost);
+          graphite.addListener('error', function(connectionException){
+            if (config.debug) {
+              sys.log(connectionException);
+            }
+          });
+          graphite.on('connect', function() {
+            this.write(statString);
+            this.end();
+          });
+        } else if (amqpExchangeIsReady) {
+          if (config.amqpMetricNameInBody) {
+            amqpExchange.publish('', statString);
+          } else {
+            var statsArray = statString.split("\n");
+            for (var i = 0; i < statsArray.length; i++) {
+              s = statsArray[i].split(" ");
+              amqpExchange.publish(s[0], s[1] + " " + s[2] + "\n");
+            }
           }
-        });
-        graphite.on('connect', function() {
-          this.write(statString);
-          this.end();
-        });
+        } 
       } catch(e){
         if (config.debug) {
           sys.log(e);
