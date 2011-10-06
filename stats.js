@@ -92,8 +92,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
       for (key in counters) {
         var value = counters[key] / (flushInterval / 1000);
-        var message = 'stats.' + key + ' ' + value + ' ' + ts + "\n";
-        message += 'stats_counts.' + key + ' ' + counters[key] + ' ' + ts + "\n";
+        var message = config.rocksteadyRetention + '.statsd.stats.' + key + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + value + ' ' + ts + "\n";
+        message += config.rocksteadyRetention + '.statsd.stats_counts.' + key + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + counters[key] + ' ' + ts + "\n";
         statString += message;
         counters[key] = 0;
 
@@ -129,18 +129,18 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           timers[key] = [];
 
           var message = "";
-          message += 'stats.timers.' + key + '.mean ' + mean + ' ' + ts + "\n";
-          message += 'stats.timers.' + key + '.upper ' + max + ' ' + ts + "\n";
-          message += 'stats.timers.' + key + '.upper_' + pctThreshold + ' ' + maxAtThreshold + ' ' + ts + "\n";
-          message += 'stats.timers.' + key + '.lower ' + min + ' ' + ts + "\n";
-          message += 'stats.timers.' + key + '.count ' + count + ' ' + ts + "\n";
+          message += config.rocksteadyRetention + '.statsd.stats.timers.' + key + '.mean ' + mean + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + ts + "\n";
+          message += config.rocksteadyRetention + '.statsd.stats.timers.' + key + '.upper ' + max + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + ts + "\n";
+          message += config.rocksteadyRetention + '.statsd.stats.timers.' + key + '.upper_' + pctThreshold + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + maxAtThreshold + ' ' + ts + "\n";
+          message += config.rocksteadyRetention + '.statsd.stats.timers.' + key + '.lower ' + min + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + ts + "\n";
+          message += config.rocksteadyRetention + '.statsd.stats.timers.' + key + '.count ' + count + '.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + ts + "\n";
           statString += message;
 
           numStats += 1;
         }
       }
 
-      statString += 'statsd.numStats ' + numStats + ' ' + ts + "\n";
+      statString += config.rocksteadyRetention + '.statsd.statsd.numStats.' + config.rocksteadyColo + '.' + config.rocksteadyHostname + ' ' + numStats + ' ' + ts + "\n";
       
       try {
         if (! config.amqp) {
