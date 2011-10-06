@@ -111,6 +111,13 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           var mean = min;
           var maxAtThreshold = max;
 
+          // calculate median
+          if (values.length%2 == 0) {
+            var median = ( values.sort()[values.length/2] + values.sort()[(values.length/2)-1] ) / 2
+          } else {
+            var median = values.sort()[(values.length-1)/2];
+          }
+
           if (count > 1) {
             var thresholdIndex = Math.round(((100 - pctThreshold) / 100) * count);
             var numInThreshold = count - thresholdIndex;
@@ -133,6 +140,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           message += 'stats.timers.' + key + '.upper ' + max + ' ' + ts + "\n";
           message += 'stats.timers.' + key + '.upper_' + pctThreshold + ' ' + maxAtThreshold + ' ' + ts + "\n";
           message += 'stats.timers.' + key + '.lower ' + min + ' ' + ts + "\n";
+          message += 'stats.timers.' + key + '.median ' + median + ' ' + ts + "\n";
           message += 'stats.timers.' + key + '.count ' + count + ' ' + ts + "\n";
           statString += message;
 
