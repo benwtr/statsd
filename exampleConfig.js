@@ -6,6 +6,14 @@ Required Variables:
   graphitePort:     port of Graphite server
   port:             StatsD listening port [default: 8125]
 
+AMQP Variables:
+  amqp:             enable AMQP (graphitePort and graphiteHost not required)
+  amqpExchange:     AMQP exchange
+  amqpOptions:      options for connecting to AMQP server
+  amqpMetricNameInBody: deliver to graphite as a batch of metrics in a single
+                    message (true), or as individual messages with the metric
+                    name as the routing key (false)
+
 Optional Variables:
 
   debug:            debug flag [default: false]
