@@ -1,5 +1,5 @@
 var dgram  = require('dgram')
-  , sys    = require('sys')
+  , sys    = require('util')
   , net    = require('net')
   , config = require('./config')
 

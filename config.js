@@ -1,5 +1,5 @@
 var fs  = require('fs')
-  , sys = require('sys')
+  , sys = require('util')
 
 var Configurator = function (file) {
 
@@ -14,7 +14,7 @@ var Configurator = function (file) {
       if (err) { throw err; }
       old_config = self.config;
 
-      self.config = process.compile('config = ' + data, file);
+      self.config = require('vm').runInThisContext('config = ' + data, file);
       self.emit('configChanged', self.config);
     });
   };
