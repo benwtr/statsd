@@ -22,13 +22,15 @@ Optional Variables:
   flushInterval:    interval (in ms) to flush to Graphite
   percentThreshold: for time information, calculate the Nth percentile
                     [%, default: 90]
+  mgmt_port:        port for tcp mgmt server, default 8126
+  delayIntervals:   number of flush intervals to wait for delayed stats.
 
 */
 {
   graphitePort: 2003
 , graphiteHost: "localhost"
 , port: 8125
-, amqp: true
+, amqp: false
 , amqpExchange: "graphite"
 , amqpMetricNameInBody: true
 , amqpOptions: {
@@ -39,4 +41,7 @@ Optional Variables:
   , vhost: '/'
   }
 , debug: false
+, mgmt_port: 8126
+, delayIntervals: 30
+, dumpMessages: false
 }

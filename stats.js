@@ -5,6 +5,7 @@ var dgram  = require('dgram')
 
 var counters = {};
 var timers = {};
+var dtimers = [];
 var debugInt, flushInt, server, mgmtServer;
 var startup_time = Math.round(new Date().getTime() / 1000);
 var amqpConnection = false;
@@ -29,7 +30,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
+      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers) + "\nDelayed Timers:\n" + sys.inspect(dtimers));
     }, config.debugInterval || 10000);
   }
 
@@ -55,6 +56,12 @@ config.configFile(process.argv[2], function (config, oldConfig) {
     }
   }
 
+  for (var i = 0; i < (config.delayIntervals || 30); i++) {
+    dtimers[i] = new Array();
+  }
+
+  var flushInterval = Number(config.flushInterval || 10000);
+
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
       if (config.dumpMessages) { sys.log(msg.toString()); }
@@ -77,10 +84,27 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             continue;
         }
         if (fields[1].trim() == "ms") {
-          if (! timers[key]) {
-            timers[key] = [];
+          // delayed timers
+          if (fields[2] && fields[2].match(/^t\d+/)) {
+            var timestamp = fields[2].match(/^t(\d+)/)[1].trim();
+            var timeNow = Math.round(new Date().getTime() / 1000);
+            var interval = flushInterval / 1000;
+            var pos = Number(Math.round((timeNow - timestamp) / interval) - 1);
+            if (timestamp >= (timeNow - (interval * (config.delayIntervals || 30)))) {
+              if (! dtimers[pos][key]) {
+                dtimers[pos][key] = new Array();
+              }
+              dtimers[pos][key].push(Number(fields[0] || 0));
+              if (config.debug) {
+                sys.log("adding to dtimer["+pos+"]"+"["+key+"]: "+ Number(fields[0] || 0));
+              }
+            }
+          } else {
+            if (! timers[key]) {
+              timers[key] = [];
+            }
+            timers[key].push(Number(fields[0] || 0));
           }
-          timers[key].push(Number(fields[0] || 0));
         } else {
           if (fields[2] && fields[2].match(/^@([\d\.]+)/)) {
             sampleRate = Number(fields[2].match(/^@([\d\.]+)/)[1]);
@@ -103,7 +127,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
         switch(cmd) {
           case "help":
-            stream.write("Commands: stats, counters, timers, quit\n\n");
+            stream.write("Commands: stats, counters, timers, dtimers, quit\n\n");
             break;
 
           case "stats":
@@ -139,6 +163,11 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             stream.write("END\n\n");
             break;
 
+          case "dtimers":
+            stream.write(sys.inspect(dtimers) + "\n");
+            stream.write("END\n\n");
+            break;
+
           case "quit":
             stream.end();
             break;
@@ -153,8 +182,6 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
     server.bind(config.port || 8125);
     mgmtServer.listen(config.mgmt_port || 8126);
-
-    var flushInterval = Number(config.flushInterval || 10000);
 
     flushInt = setInterval(function () {
       var statString = '';
@@ -172,6 +199,15 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         numStats += 1;
       }
 
+      dtimers.push(new Array());
+      var dtimers_now = dtimers.shift();
+      for (key in dtimers_now) {
+        if (! timers[key]) {
+          timers[key] = [];
+        }
+        timers[key] = timers[key].concat(dtimers_now[key]);
+      }
+
       for (key in timers) {
         if (timers[key].length > 0) {
           var pctThreshold = config.percentThreshold || 90;
@@ -185,7 +221,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
           // calculate median
           if (values.length%2 == 0) {
-            var median = ( values.sort()[values.length/2] + values.sort()[(values.length/2)-1] ) / 2
+            var median = (values.sort()[values.length/2] + values.sort()[(values.length/2)-1]) / 2
           } else {
             var median = values.sort()[(values.length-1)/2];
           }

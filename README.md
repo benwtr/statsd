@@ -36,6 +36,15 @@ Timing
 
 The glork took 320ms to complete this time. StatsD figures out 90th percentile, average (mean), lower and upper bounds for the flush interval.  The percentile threshold can be tweaked with `config.percentThreshold`.
 
+
+Delayed Timing
+--------------
+
+    glub:320|ms|t1321997890
+
+Instead of statsd sending the timing stats to graphite at the end of the flush interval, StatsD can also delay the write to graphite while additional timer stats arrive. The final parameter is a timestamp in unix time, prefixed with the lowercase letter "t", intended as the time the stats were generated. The number of flush intervals StatsD will wait for timer stats can be configured with `config.delayIntervals`, the default is 5 minutes or 30 * 10sec flush intervals.
+
+
 Sampling
 --------
 
