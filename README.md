@@ -29,6 +29,16 @@ Counting
 This is a simple counter. Add 1 to the "gorets" bucket. It stays in memory until the flush interval `config.flushInterval`.
 
 
+Gauging
+------
+
+    grud:20|g
+
+Gauges are useful for things like disk and memory usage, or the current measurement from your networked coffee pot scale.
+
+The format for the UDP packet is like the others, except it ends in 'g' instead of in 'ms' or 'c'.
+
+
 Timing
 ------
 
@@ -95,6 +105,7 @@ A really simple TCP management interface is available by default on port 8126 or
 * stats - some stats about the running server
 * counters - a dump of all the current counters
 * timers - a dump of the current timers
+* gauges - a dump of the current gauges
 
 The stats output currently will give you:
 
