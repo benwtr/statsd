@@ -22,8 +22,10 @@ Optional Variables:
   flushInterval:    interval (in ms) to flush to Graphite
   percentThreshold: for time information, calculate the Nth percentile
                     [%, default: 90]
-  mgmt_port:        port for tcp mgmt server, default 8126
   delayIntervals:   number of flush intervals to wait for delayed stats.
+  address:          ip address to bind to
+  mgmt_address:     ip address to bind to for mgmt server
+  mgmt_port:        port for tcp mgmt server, default 8126
 
 */
 {
