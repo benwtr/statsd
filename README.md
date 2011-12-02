@@ -106,6 +106,7 @@ A really simple TCP management interface is available by default on port 8126 or
 * counters - a dump of all the current counters
 * timers - a dump of the current timers
 * gauges - a dump of the current gauges
+* dtimers - a dump of the current dtimers
 
 The stats output currently will give you:
 
