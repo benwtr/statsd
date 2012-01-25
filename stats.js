@@ -92,7 +92,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             var interval = flushInterval / 1000;
             var pos = Number(Math.round((timeNow - timestamp) / interval) - 1);
             if (timestamp >= (timeNow - (interval * (config.delayIntervals || 30)))) {
-              if (! dtimers[pos][key]) {
+              if (dtimers[pos][key] === undefined) {
                 dtimers[pos][key] = new Array();
               }
               dtimers[pos][key].push(Number(fields[0] || 0));
